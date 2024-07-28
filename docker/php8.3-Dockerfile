@@ -1,0 +1,68 @@
+FROM ubuntu:24.04
+
+RUN apt update \
+    &&  apt -y install \
+    autoconf \
+    build-essential \
+    curl \
+    libapr1-dev \
+    libaprutil1-dev \
+    libc-client-dev \
+    libcurl4-openssl-dev \
+    libfreetype6-dev \
+    libgmp-dev \
+    libjpeg-dev \
+    libltdl-dev \
+    libonig-dev \
+    libpng-dev \
+    libpq-dev \
+    libsodium-dev \
+    libsqlite3-dev \
+    libssl-dev \
+    libtidy-dev \
+    libwebp-dev \
+    libxml2-dev \
+    libzip-dev \
+    nginx \
+    pkg-config \
+    wget
+
+RUN wget -c https://www.php.net/distributions/php-8.3.9.tar.bz2 \
+    && tar -jxvf php-8.3.9.tar.bz2 \
+    && rm php-8.3.9.tar.bz2
+
+RUN cd php-8.3.9 \
+    &&  ./configure \
+        --prefix=/usr \
+        --enable-bcmath \
+        --enable-fpm \
+        --enable-gd \
+        --enable-intl \
+        --enable-mbstring \
+        --enable-soap \
+        --enable-sockets \
+        --with-curl \
+        --with-freetype \
+        --with-gmp \
+        --with-jpeg \
+        --with-mysqli \
+        --with-openssl \
+        --with-pdo-mysql \
+        --with-pdo-pgsql \
+        --with-sodium \
+        --with-tidy \
+        --with-webp \
+        --with-zip \
+        --with-zlib \
+    &&  make \
+    &&  make install \
+    && cd .. \
+    && rm -rf php-8.3.9
+
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
+    && php -r "if (hash_file('sha384', 'composer-setup.php') === 'dac665fdc30fdd8ec78b38b9800061b4150413ff2e3b6f88543c636f7cd84f6db9189d43a81e5503cda447da73c7e5b6') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;" \
+    && php composer-setup.php \
+    && php -r "unlink('composer-setup.php');" \
+    && mv composer.phar /usr/local/bin/composer
+
+RUN mkdir /app
